@@ -322,7 +322,7 @@ std::vector<patch> ibootpatchfinder64_base::get_boot_arg_patch(const char *boota
     debug("Relocating boot-args string...\n");
     loc_t cert_str_loc = 0;
     loc_t bootarg_loc1 = _vmem->memmem(_270ZEROES, 270, default_boot_args_xref);
-    if(_chipid == 8010 || ((_chipid == 8000 || _chipid == 8003) && !_7429_0)) {
+    if(_chipid == 8010 || _chipid == 8003 || (_chipid == 8000 && !_7429_0)) {
         debug("Finding another bootarg location...\n");
         bootarg_loc1 = _vmem->memmem(_270ZEROES, 270, bootarg_loc1 + 270);
     }
