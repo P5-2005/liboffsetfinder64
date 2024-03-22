@@ -28,8 +28,8 @@ patchfinder64::patchfinder64(bool freeBuf) :
     _freeBuf(freeBuf),
     _buf(NULL),
     _bufSize(0),
-    _entrypoint(NULL),
-    _base(NULL)
+    _entrypoint(0),
+    _base(0)
 {
     //
 }

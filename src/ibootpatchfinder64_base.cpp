@@ -52,7 +52,7 @@ ibootpatchfinder64_base::ibootpatchfinder64_base(const char * filename) :
     assure(_bufSize > 0x1000);
     
     assure(!strncmp((char*)&_buf[IBOOT_VERS_STR_OFFSET], "iBoot", sizeof("iBoot")-1));
-    retassure(_vers = atoi((char*)&_buf[IBOOT_VERS_STR_OFFSET+6]), "No iBoot version found!\n");
+    retassure(_vers = atoi((char*)&_buf[IBOOT_VERS_STR_OFFSET+6]), "No iBoot version found!");
     debug("_vers: %d\n", _vers);
     if(_vers < 3000) {
         debug("1337: 1\n");
@@ -107,7 +107,7 @@ ibootpatchfinder64_base::ibootpatchfinder64_base(const void *buffer, size_t bufS
     assure(_bufSize > 0x1000);
     
     assure(!strncmp((char*)&_buf[IBOOT_VERS_STR_OFFSET], "iBoot", sizeof("iBoot")-1));
-    retassure(_vers = atoi((char*)&_buf[IBOOT_VERS_STR_OFFSET+6]), "No iBoot version found!\n");
+    retassure(_vers = atoi((char*)&_buf[IBOOT_VERS_STR_OFFSET+6]), "No iBoot version found!");
     if(_vers < 3000) {
         stage1 = !strncmp((char *) &_buf[IBOOT_STAGE_STR_OFFSET], "iBSS", sizeof("iBSS") - 1);
         stage2 = !strncmp((char *) &_buf[IBOOT_STAGE_STR_OFFSET], "iBEC", sizeof("iBEC") - 1);
@@ -279,6 +279,7 @@ std::vector<patch> ibootpatchfinder64_base::get_boot_arg_patch(const char *boota
     int default_boot_args_len = 0;
     bool _7429_0 = (_vers >= 7429 && _vers_arr[0] >= 0);
     bool _6723_100 = ((_vers == 6723 && _vers_arr[0] >= 100) || (_vers > 6723)) && !_7429_0;
+    bool _10151_0 = (_vers >= 10151 && _vers_arr[0] >= 0);
 
     try {
         default_boot_args_str_loc = _vmem->memstr(DEFAULT_BOOTARGS_STR);
@@ -295,27 +296,27 @@ std::vector<patch> ibootpatchfinder64_base::get_boot_arg_patch(const char *boota
         }
     }
 
-    assure(default_boot_args_str_loc);
+    retassure(default_boot_args_str_loc, "retassure: %d", __LINE__);
     default_boot_args_str_loc = dev ? default_boot_args_str_loc - 1 : default_boot_args_str_loc;
     debug("default_boot_args_str_loc=%p\n", default_boot_args_str_loc);
 
     if((_6723_100 || _7429_0) && !dev) {
         loc_t adr1 = 0;
-        assure(adr1 = find_literal_ref(default_boot_args_str_loc));
+        retassure(adr1 = find_literal_ref(default_boot_args_str_loc), "retassure: %d", __LINE__);
         debug("adr1=%p\n", adr1);
         vmem iter(*_vmem, adr1);
         while (++iter != insn::b) continue;
         loc_t bootargstackvarbranch = 0;
-        assure(bootargstackvarbranch = (loc_t)iter().imm());
+        retassure(bootargstackvarbranch = (loc_t)iter().imm(), "retassure: %d", __LINE__);
         debug("bootargstackvarbranch=%p\n", bootargstackvarbranch);
         iter = vmem(*_vmem,bootargstackvarbranch);
         while(++iter != insn::bl) continue;
         while(--iter != insn::nop) continue;
         loc_t bootargstackvar = iter().pc();
-        assure(default_boot_args_xref = bootargstackvar);
+        retassure(default_boot_args_xref = bootargstackvar, "retassure: %d", __LINE__);
         debug("bootargstackvar=%p\n", bootargstackvar);
     } else {
-        assure(default_boot_args_xref = find_literal_ref(default_boot_args_str_loc));
+        retassure(default_boot_args_xref = find_literal_ref(default_boot_args_str_loc), "retassure: %d", __LINE__);
         debug("default_boot_args_xref=%p\n",default_boot_args_xref);
     }
 
@@ -349,7 +350,7 @@ std::vector<patch> ibootpatchfinder64_base::get_boot_arg_patch(const char *boota
         default_boot_args_str_loc = iter().pc() - 1;
     } else {
         /* Find the "Reliance on this cert..." string. */
-        retassure(cert_str_loc = _vmem->memstr(CERT_STR), "Unable to find \"%s\" string!\n", CERT_STR);
+        retassure(cert_str_loc = _vmem->memstr(CERT_STR), "Unable to find \"%s\" string!", CERT_STR);
 
         debug("\"%s\" string found at %p\n", CERT_STR, cert_str_loc);
 
@@ -359,90 +360,104 @@ std::vector<patch> ibootpatchfinder64_base::get_boot_arg_patch(const char *boota
         default_boot_args_str_loc = cert_str_loc;
     }
 
-
-    vmem iter2(*_vmem,default_boot_args_xref);
+    vmem iter2(*_vmem, default_boot_args_xref);
 
     uint8_t _reg = 0;
 
-    if((_6723_100 || _7429_0) && !dev) {
-        assure(iter2() == insn::nop);
-        loc_t adr2 = 0;
-        retassure(adr2 = _vmem->memstr(DEFAULT_BOOTARGS_STR_OTHER2), "Unable to find \"%s\" string!\n", DEFAULT_BOOTARGS_STR_OTHER2);
-        loc_t adr2_xref = 0;
-        retassure(adr2_xref = find_literal_ref(adr2), "Unable to find \"%s\" xref for string!\n", DEFAULT_BOOTARGS_STR_OTHER2); 
-        iter2 = vmem(*_vmem,adr2_xref);
-        while(--iter2 != insn::sub) continue;
-        assure(iter2() == insn::sub);
-        assure(iter2().rd());
-        _reg = iter2().rd();
+    if ((_6723_100 || _7429_0) && !dev) {
+      retassure(iter2() == insn::nop, "retassure: %d", __LINE__);
+      loc_t adr2 = 0;
+      retassure(adr2 = _vmem->memstr(DEFAULT_BOOTARGS_STR_OTHER2),
+                "Unable to find \"%s\" string!\n",
+                DEFAULT_BOOTARGS_STR_OTHER2);
+      loc_t adr2_xref = 0;
+      retassure(adr2_xref = find_literal_ref(adr2),
+                "Unable to find \"%s\" xref for string!\n",
+                DEFAULT_BOOTARGS_STR_OTHER2);
+      iter2 = vmem(*_vmem, adr2_xref);
+      if(_10151_0) {
+        while (++iter2 != insn::sub)
+          continue;
+      } else {
+        while (--iter2 != insn::sub)
+          continue;
+      }
+      retassure(iter2() == insn::sub, "retassure: %d", __LINE__);
+      retassure(iter2().rd(), "retassure: %d", __LINE__);
+      _reg = iter2().rd();
     } else {
-        if(iter2() != insn::adr) {
-            --iter2;
-            --iter2;
-            assure(iter2() == insn::bl);
-            ++iter2;
-            _reg = iter2().rd();
-        } else {
-            assure(iter2() == insn::adr);
-            _reg = iter2().rd();
-        }
+      if (iter2() != insn::adr) {
+        --iter2;
+        --iter2;
+        retassure(iter2() == insn::bl, "retassure: %d", __LINE__);
+        ++iter2;
+        _reg = iter2().rd();
+      } else {
+        retassure(iter2() == insn::adr, "retassure: %d", __LINE__);
+        _reg = iter2().rd();
+      }
     }
 
-    insn pins = insn::new_general_adr(default_boot_args_xref, (int64_t)default_boot_args_str_loc, _reg);
-    
+    insn pins = insn::new_general_adr(
+        default_boot_args_xref, (int64_t)default_boot_args_str_loc, _reg);
+
     uint32_t opcode = pins.opcode();
     patches.push_back({(loc_t)pins.pc(), &opcode, 4});
-    
-    debug("Applying custom boot-args \"%s\"\n", bootargs);
-    patches.push_back({default_boot_args_str_loc, bootargs, strlen(bootargs)+1});
-    
 
-    vmem iter(*_vmem,default_boot_args_xref);
+    debug("Applying custom boot-args \"%s\"\n", bootargs);
+    patches.push_back(
+        {default_boot_args_str_loc, bootargs, strlen(bootargs) + 1});
+
+    vmem iter(*_vmem, default_boot_args_xref);
     uint8_t xrefRD = 0;
-    if(_6723_100 || _7429_0) {
-        xrefRD = 4;
+    if (_6723_100 || _7429_0) {
+      xrefRD = 4;
     } else {
-        xrefRD = iter().rd();
+      xrefRD = iter().rd();
     }
-    debug("xrefRD=%d\n",xrefRD);
-    if(xrefRD > 9 || xrefRD == 4)
-        return patches;
-    
-    while (++iter != insn::csel);
-    
+    debug("xrefRD=%d\n", xrefRD);
+    if (xrefRD > 9 || xrefRD == 4)
+      return patches;
+
+    while (++iter != insn::csel)
+      ;
+
     insn csel = iter();
     debug("csel=%p\n", (loc_t)csel.pc());
 
-    assure(xrefRD == csel.rn() || xrefRD == csel.rm());
-    
-    debug("cselrd=%d\n",csel.rd());
-        
-    
+    retassure(xrefRD == csel.rn() || xrefRD == csel.rm(), "retassure: %d", __LINE__);
+
+    debug("cselrd=%d\n", csel.rd());
+
     {
-        insn pins = insn::new_register_mov(iter, 0, csel.rd(), -1, xrefRD);
-        debug("(%p)patching: \"mov x%d, x%d\"\n",(loc_t)pins.pc(),pins.rd(),pins.rm());
-        uint32_t opcode = pins.opcode();
-        patches.push_back({(loc_t)pins.pc(), &opcode, 4});
+      insn pins = insn::new_register_mov(iter, 0, csel.rd(), -1, xrefRD);
+      debug("(%p)patching: \"mov x%d, x%d\"\n", (loc_t)pins.pc(), pins.rd(),
+            pins.rm());
+      uint32_t opcode = pins.opcode();
+      patches.push_back({(loc_t)pins.pc(), &opcode, 4});
     }
 
-    
-    while ((--iter).supertype() != insn::sut_branch_imm || iter() == insn::bl);
-    
-    debug("branch loc=%p\n",(loc_t)iter);
-    
+    while ((--iter).supertype() != insn::sut_branch_imm || iter() == insn::bl)
+      ;
+
+    debug("branch loc=%p\n", (loc_t)iter);
+
     iter = (loc_t)iter().imm();
 
-    debug("branch dst=%p\n",(loc_t)iter);
-    
+    debug("branch dst=%p\n", (loc_t)iter);
+
     if (iter() != insn::adr) {
-        while (++iter != insn::adr);
+      while (++iter != insn::adr)
+        ;
     }
-    
+
     {
-        insn pins = insn::new_general_adr(iter, (int64_t)default_boot_args_str_loc, iter().rd());
-        debug("(%p)patching: \"adr x%d, 0x%llx\"\n",(loc_t)pins.pc(),pins.rd(),pins.imm());
-        uint32_t opcode = pins.opcode();
-        patches.push_back({(loc_t)pins.pc(), &opcode, 4});
+      insn pins = insn::new_general_adr(
+          iter, (int64_t)default_boot_args_str_loc, iter().rd());
+      debug("(%p)patching: \"adr x%d, 0x%llx\"\n", (loc_t)pins.pc(),
+            pins.rd(), pins.imm());
+      uint32_t opcode = pins.opcode();
+      patches.push_back({(loc_t)pins.pc(), &opcode, 4});
     }
 
     return patches;

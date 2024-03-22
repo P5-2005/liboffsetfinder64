@@ -361,7 +361,7 @@ std::vector<patch> kernelpatchfinder64::get_mount_patch(){
 
     iter = ref;
     
-    while (--iter != insn::ldrb);
+    while (--iter != insn::ldrb) continue;
     
     {
         debug("p1=%p\n",(loc_t)iter);

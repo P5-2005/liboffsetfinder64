@@ -41,32 +41,35 @@ std::vector<patch> ibootpatchfinder64_iOS14::get_sigcheck_patch(){
         img4decodemanifestexists = _vmem->memmem("\xE8\x03\x00\xAA\xC0\x00\x80\x52\xE8\x00\x00\xB4", 12); //0x180032144;
     }
     debug("img4decodemanifestexists=%p",img4decodemanifestexists);
-    assure(img4decodemanifestexists);
+    retassure(img4decodemanifestexists, "retassure: %d", __LINE__);
 
     loc_t img4decodemanifestexistsref = find_call_ref(img4decodemanifestexists);
     debug("img4decodemanifestexistsref=%p",img4decodemanifestexistsref);
-    assure(img4decodemanifestexistsref);
+    retassure(img4decodemanifestexistsref, "retassure: %d", __LINE__);
 
     vmem iter(*_vmem,img4decodemanifestexistsref);
     vmem iter2(*_vmem,img4decodemanifestexistsref);
 
-    while(++iter != insn::adr);
+    while(++iter != insn::adr) continue;
+    if(_vers >= 10151) {
+      while(++iter != insn::adr) continue;
+    }
     if((uint8_t)iter().rd() != 2) {
         while(++iter2 != insn::adr);
-        assure((uint8_t)iter().rd() == 2);
+        retassure((uint8_t)iter().rd() == 2, "retassure: %d", __LINE__);
     }
     loc_t img4interposercallbackptr = iter().imm();
     debug("img4interposercallbackptr=%p",img4interposercallbackptr);
-    assure(img4interposercallbackptr);
+    retassure(img4interposercallbackptr, "retassure: %d", __LINE__);
 
     loc_t img4interposercallback = _vmem->deref(img4interposercallbackptr);
     debug("img4interposercallback=%p",img4interposercallback);
-    assure(img4interposercallback);
+    retassure(img4interposercallback, "retassure: %d", __LINE__);
 
     vmem iter3(*_vmem,img4interposercallback);
     while(++iter3 != insn::ret);
     loc_t img4interposercallbackret = iter3().pc();
-    assure(img4interposercallbackret);
+    retassure(img4interposercallbackret, "retassure: %d", __LINE__);
     debug("img4interposercallbackret=%p",img4interposercallbackret);
     if(--iter3 == insn::add) {
         while(--iter3 == insn::ldp);
@@ -74,13 +77,13 @@ std::vector<patch> ibootpatchfinder64_iOS14::get_sigcheck_patch(){
             while(--iter3 != insn::nop);
         }
         loc_t img4interposercallbackmov = iter3().pc();
-        assure(img4interposercallbackmov);
+        retassure(img4interposercallbackmov, "retassure: %d", __LINE__);
         debug("img4interposercallbackmov=%p",img4interposercallbackmov);
         patches.push_back({img4interposercallbackmov, "\x00\x00\x80\xD2" /*mov x0, 0*/, 4});
         while (++iter3 != insn::ret);
         while (++iter3 != insn::ret);
         loc_t img4interposercallbackret2 = iter3().pc();
-        assure(img4interposercallbackret2);
+        retassure(img4interposercallbackret2, "retassure: %d", __LINE__);
         debug("img4interposercallbackret2=%p", img4interposercallbackret2);
         patches.push_back({img4interposercallbackret2 - 4, "\x00\x00\x80\xD2" /*mov x0, 0*/, 4});
     } else {
