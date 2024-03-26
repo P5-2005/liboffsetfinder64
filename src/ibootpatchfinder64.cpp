@@ -7,7 +7,7 @@
 //
 
 #include "ibootpatchfinder64.hpp"
-
+#include <memory>
 #include "ibootpatchfinder64_base.hpp"
 #include "ibootpatchfinder64_iOS14.hpp"
 
@@ -37,23 +37,28 @@ ibootpatchfinder64::ibootpatchfinder64(bool freeBuf)
 
 ibootpatchfinder64 *ibootpatchfinder64::make_ibootpatchfinder64(const char * filename){
     bool didConstructSuccessfully = false;
-    int fd = 0;
+    int fd = -1;
     uint8_t *buf = NULL;
-    cleanup([&]{
-        if (fd>0) close(fd);
+    
+    
+    auto cleanup = [&](void*) {
+        if (fd != -1) _close(fd);
         if (!didConstructSuccessfully) {
-            safeFreeConst(buf);
+            free(buf);
         }
-    })
-    struct stat fs = {0};
+    };
+
+    
+    std::unique_ptr<void, decltype(cleanup)> autoCleanup(nullptr, cleanup);
+
+    struct _stat64 fs = {0};
     size_t bufSize = 0;
     
-    assure((fd = open(filename, O_RDONLY)) != -1);
-    assure(!fstat(fd, &fs));
-    assure((buf = (uint8_t*)malloc(bufSize = fs.st_size)));
-    assure(read(fd,(void*)buf,bufSize)== bufSize);
+    assure((fd = _open(filename, O_RDONLY | O_BINARY)) != -1);
+    assure(!_fstat64(fd, &fs));
+    assure((buf = static_cast<uint8_t*>(malloc(bufSize = static_cast<size_t>(fs.st_size)))));
+    assure(_read(fd, buf, static_cast<unsigned int>(bufSize)) == static_cast<int>(bufSize));
     
-
     auto ret = make_ibootpatchfinder64(buf, bufSize, true);
     didConstructSuccessfully = true;
     return ret;
