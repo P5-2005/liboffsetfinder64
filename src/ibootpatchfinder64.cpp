@@ -82,14 +82,18 @@ ibootpatchfinder64 *ibootpatchfinder64::make_ibootpatchfinder64(const void *buff
     debug("iBoot-%d inputted\n", vers);
 
     if (vers >= 6671) {
-        if(vers >= 7429 && vers < 8419) {
-            printf("iOS 15 iBoot detected!\n");
+        if(vers >= 10151) {
+          printf("iOS 17 iBoot detected!\n");
+        } else if(vers >= 8419 && vers < 10151) {
+          printf("iOS 16 iBoot detected!\n");
+        } else if(vers >= 7429 && vers < 8419) {
+          printf("iOS 15 iBoot detected!\n");
         } else if(vers >= 8419 && vers <= 9000) {
-            printf("iOS 16 iBoot detected!\n");
+          printf("iOS 16 iBoot detected!\n");
         } else if(vers < 7429) {
-            printf("iOS 14 iBoot detected!\n");
+          printf("iOS 14 iBoot detected!\n");
         } else {
-            printf("Unknown iOS versioned iBoot detected!\n");
+          printf("Unknown iOS versioned iBoot detected!\n");
         }
         return new ibootpatchfinder64_iOS14(buf,bufSize,takeOwnership);
     }
