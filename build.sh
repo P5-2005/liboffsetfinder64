@@ -8,7 +8,7 @@ export CXX="$(which clang++)"
 which xcrun >/dev/null
  if [[ "$?" -lt 1 ]]; then export CC="$(xcrun --find clang)"; export CXX="$(xcrun --find clang++)"; fi
 echo "[*] Building liboffsetfinder64"
-export LOF64_INSTALL_DIR="/usr/local"
+export LOF64_INSTALL_DIR="/ucrt64"
 if [[ -z "$NO_CLEAN" ]]; then rm -rf cmake-build-release cmake-build-debug; fi
 if [[ "$RELEASE" == "1" ]]
 then
