@@ -255,8 +255,8 @@ std::vector<patch> ibootpatchfinder64_base::get_sigcheck_patch(){
 
 std::vector<patch> ibootpatchfinder64_base::get_demotion_patch(){
     std::vector<patch> patches;
-    /* always production patch*/
-    for (uint64_t demoteReg : {0x3F500000UL,0x3F500000UL,0x3F500000UL,0x481BC000UL,0x481BC000UL,0x20E02A000UL,0x2102BC000UL,0x2102BC000UL,0x2352BC000UL}) {
+    /* always production patch */
+    for (uint64_t demoteReg : {0x3F500000ULL, 0x3F500000ULL, 0x3F500000ULL, 0x481BC000ULL, 0x481BC000ULL, 0x20E02A000ULL, 0x2102BC000ULL, 0x2102BC000ULL, 0x2352BC000ULL}) {
         loc_t demoteRef = find_literal_ref(demoteReg);
         if (demoteRef) {
             vmem iter(*_vmem,demoteRef);
