@@ -51,7 +51,7 @@ std::vector<patch> ibootpatchfinder64_iOS14::get_sigcheck_patch(){
     vmem iter2(*_vmem,img4decodemanifestexistsref);
 
     while(++iter != insn::adr) continue;
-    if(_vers >= 10151) {
+    if(_vers >= 10151 && _vers_arr[0] > 80) {
       while(++iter != insn::adr) continue;
     }
     if((uint8_t)iter().rd() != 2) {
