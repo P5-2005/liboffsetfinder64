@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <arpa/inet.h>
+#include <winsock2.h>
 
 #include <mach-o/loader.h>
 #include <mach-o/nlist.h>
